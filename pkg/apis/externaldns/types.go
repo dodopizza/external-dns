@@ -185,6 +185,9 @@ type Config struct {
 	GoDaddyTTL                        int64
 	GoDaddyOTE                        bool
 	OCPRouterName                     string
+	YandexAuthorizationType           string
+	YandexAuthorizationOAuthToken     string
+	YandexAuthorizationKeyFile        string
 }
 
 var defaultConfig = &Config{
@@ -312,6 +315,7 @@ var defaultConfig = &Config{
 	GoDaddySecretKey:            "",
 	GoDaddyTTL:                  600,
 	GoDaddyOTE:                  false,
+	YandexAuthorizationType:     "instance-service-account",
 }
 
 // NewConfig returns new Config object
