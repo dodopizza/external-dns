@@ -87,12 +87,13 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/fatih/structs v1.1.0 // indirect
+	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
 	github.com/go-resty/resty/v2 v2.1.1-0.20191201195748-d7b97669fe48 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v4 v4.0.0 // indirect
+	github.com/golang-jwt/jwt/v4 v4.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -133,6 +134,8 @@ require (
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/terra-farm/udnssdk v1.3.5 // indirect
 	github.com/ukfast/go-durationstring v1.0.0 // indirect
+	github.com/yandex-cloud/go-genproto v0.0.0-20220228113408-caf9f84c440c // indirect
+	github.com/yandex-cloud/go-sdk v0.0.0-20220228113930-55bcd14d7e7e // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
