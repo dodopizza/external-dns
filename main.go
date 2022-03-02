@@ -354,6 +354,14 @@ func main() {
 		p, err = plural.NewPluralProvider(cfg.PluralCluster, cfg.PluralProvider)
 	case "tencentcloud":
 		p, err = tencentcloud.NewTencentCloudProvider(domainFilter, zoneIDFilter, cfg.TencentCloudConfigFile, cfg.TencentCloudZoneType, cfg.DryRun)
+	case "yandex":
+		p, err = yandex.NewYandexProvider(
+			&yandex.YandexConfig{
+				DomainFilter:   domainFilter,
+				ZoneNameFilter: zoneNameFilter,
+				DryRun:         cfg.DryRun,
+			},
+		)
 	default:
 		log.Fatalf("unknown dns provider: %s", cfg.Provider)
 	}
