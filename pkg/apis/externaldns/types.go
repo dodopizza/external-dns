@@ -185,6 +185,7 @@ type Config struct {
 	GoDaddyTTL                        int64
 	GoDaddyOTE                        bool
 	OCPRouterName                     string
+	YandexFolderId                    string
 	YandexAuthorizationType           string
 	YandexAuthorizationOAuthToken     string
 	YandexAuthorizationKeyFile        string
