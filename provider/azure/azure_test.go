@@ -164,6 +164,16 @@ func createMockRecordSetMultiWithTTL(name, recordType string, ttl int64, values 
 	}
 
 }
+func createAliasMockRecordSetWithTTL(name, recordType, value string, ttl int64) dns.RecordSet {
+	return dns.RecordSet{
+		Name: to.StringPtr(name),
+		Type: to.StringPtr("Microsoft.Network/dnszones/" + recordType),
+		RecordSetProperties: &dns.RecordSetProperties{
+			TTL:            to.Int64Ptr(ttl),
+			TargetResource: &dns.SubResource{ID: &value},
+		},
+	}
+}
 
 func (client *mockRecordSetsClient) ListAllByDNSZoneComplete(ctx context.Context, resourceGroupName string, zoneName string, top *int32, recordSetNameSuffix string) (result dns.RecordSetListResultIterator, err error) {
 	// pre-iterate to first item to emulate behaviour of Azure SDK
@@ -192,15 +202,14 @@ func (client *mockRecordSetsClient) CreateOrUpdate(ctx context.Context, resource
 	if parameters.TTL != nil {
 		ttl = endpoint.TTL(*parameters.TTL)
 	}
-	client.updatedEndpoints = append(
-		client.updatedEndpoints,
-		endpoint.NewEndpointWithTTL(
-			formatAzureDNSName(relativeRecordSetName, zoneName),
-			string(recordType),
-			ttl,
-			extractAzureTargets(&parameters)...,
-		),
+	ep := endpoint.NewEndpointWithTTL(
+		formatAzureDNSName(relativeRecordSetName, zoneName),
+		string(recordType),
+		ttl,
+		extractAzureTargets(&parameters)...,
 	)
+	ep = enrichAzureProviderSpecificOptions(ep, &parameters)
+	client.updatedEndpoints = append(client.updatedEndpoints, ep)
 	return parameters, nil
 }
 
@@ -269,6 +278,7 @@ func TestAzureRecord(t *testing.T) {
 			createMockRecordSetWithTTL("nginx", endpoint.RecordTypeA, "123.123.123.123", 3600),
 			createMockRecordSetWithTTL("nginx", endpoint.RecordTypeTXT, "heritage=external-dns,external-dns/owner=default", recordTTL),
 			createMockRecordSetWithTTL("hack", endpoint.RecordTypeCNAME, "hack.azurewebsites.net", 10),
+			createAliasMockRecordSetWithTTL("alias", endpoint.RecordTypeA, "/subscriptions/12345678-1234-1234-1234-123412341234/resourceGroups/test-rg/providers/Microsoft.Network/frontdoors/test-afd", 10),
 		})
 
 	if err != nil {
@@ -287,6 +297,7 @@ func TestAzureRecord(t *testing.T) {
 		endpoint.NewEndpointWithTTL("nginx.example.com", endpoint.RecordTypeA, 3600, "123.123.123.123"),
 		endpoint.NewEndpointWithTTL("nginx.example.com", endpoint.RecordTypeTXT, recordTTL, "heritage=external-dns,external-dns/owner=default"),
 		endpoint.NewEndpointWithTTL("hack.example.com", endpoint.RecordTypeCNAME, 10, "hack.azurewebsites.net"),
+		endpoint.NewEndpointWithTTL("alias.example.com", endpoint.RecordTypeA, 10, "/subscriptions/12345678-1234-1234-1234-123412341234/resourceGroups/test-rg/providers/Microsoft.Network/frontdoors/test-afd").WithProviderSpecific("Type", "Alias"),
 	}
 
 	validateAzureEndpoints(t, actual, expected)
@@ -497,6 +508,8 @@ func TestAzureApplyChangesZoneName(t *testing.T) {
 	validateAzureEndpoints(t, recordsClient.updatedEndpoints, []*endpoint.Endpoint{
 		endpoint.NewEndpointWithTTL("foo.example.com", endpoint.RecordTypeA, endpoint.TTL(recordTTL), "1.2.3.4", "1.2.3.5"),
 		endpoint.NewEndpointWithTTL("foo.example.com", endpoint.RecordTypeTXT, endpoint.TTL(recordTTL), "tag"),
+		endpoint.NewEndpointWithTTL("alias.foo.example.com", endpoint.RecordTypeA, endpoint.TTL(recordTTL), "/subscriptions/12345678-1234-1234-1234-123412341234/resourceGroups/test-rg/providers/Microsoft.Network/frontdoors/test-afd").
+			WithProviderSpecific("Type", "Alias"),
 		endpoint.NewEndpointWithTTL("new.foo.example.com", endpoint.RecordTypeA, 3600, "111.222.111.222"),
 		endpoint.NewEndpointWithTTL("newcname.foo.example.com", endpoint.RecordTypeCNAME, 10, "other.com"),
 	})
@@ -543,6 +556,8 @@ func testAzureApplyChangesInternalZoneName(t *testing.T, dryRun bool, client Rec
 		endpoint.NewEndpoint("example.com", endpoint.RecordTypeTXT, "tag"),
 		endpoint.NewEndpoint("foo.example.com", endpoint.RecordTypeA, "1.2.3.5", "1.2.3.4"),
 		endpoint.NewEndpoint("foo.example.com", endpoint.RecordTypeTXT, "tag"),
+		endpoint.NewEndpoint("alias.foo.example.com", endpoint.RecordTypeA, "/subscriptions/12345678-1234-1234-1234-123412341234/resourceGroups/test-rg/providers/Microsoft.Network/frontdoors/test-afd").
+			WithProviderSpecific("Type", "Alias"),
 		endpoint.NewEndpoint("bar.example.com", endpoint.RecordTypeCNAME, "other.com"),
 		endpoint.NewEndpoint("bar.example.com", endpoint.RecordTypeTXT, "tag"),
 		endpoint.NewEndpoint("other.com", endpoint.RecordTypeA, "5.6.7.8"),

@@ -417,7 +417,7 @@ func formatAzureDNSName(recordName, zoneName string) string {
 	return fmt.Sprintf("%s.%s", recordName, zoneName)
 }
 
-// Helper function (shared with text code)
+// Helper function (shared with test code)
 func extractAzureTargets(recordSet *dns.RecordSet) []string {
 	properties := recordSet.RecordSetProperties
 	if properties == nil {
@@ -459,7 +459,7 @@ func extractAzureTargets(recordSet *dns.RecordSet) []string {
 	return []string{}
 }
 
-// Helper function
+// Helper function (shared with test code)
 func enrichAzureProviderSpecificOptions(ep *endpoint.Endpoint, recordSet *dns.RecordSet) *endpoint.Endpoint {
 	properties := recordSet.RecordSetProperties
 	if properties == nil {
