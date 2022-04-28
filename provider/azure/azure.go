@@ -356,18 +356,33 @@ func (p *AzureProvider) newRecordSet(endpoint *endpoint.Endpoint) (dns.RecordSet
 	}
 	switch dns.RecordType(endpoint.RecordType) {
 	case dns.A:
-		aRecords := make([]dns.ARecord, len(endpoint.Targets))
-		for i, target := range endpoint.Targets {
-			aRecords[i] = dns.ARecord{
-				Ipv4Address: to.StringPtr(target),
-			}
-		}
-		return dns.RecordSet{
+		recordSet := dns.RecordSet{
 			RecordSetProperties: &dns.RecordSetProperties{
-				TTL:      to.Int64Ptr(ttl),
-				ARecords: &aRecords,
+				TTL: to.Int64Ptr(ttl),
 			},
-		}, nil
+		}
+
+		if endpoint.ProviderSpecific != nil {
+			// if endpoint is alias record set, use targets[0] as target resource
+			for _, property := range endpoint.ProviderSpecific {
+				if property.Name == "Type" && property.Value == "Alias" {
+					recordSet.TargetResource = &dns.SubResource{
+						ID: &endpoint.Targets[0],
+					}
+				}
+			}
+		} else {
+			// otherwise, this is a regular record set, fill A records property
+			aRecords := make([]dns.ARecord, len(endpoint.Targets))
+			for i, target := range endpoint.Targets {
+				aRecords[i] = dns.ARecord{
+					Ipv4Address: to.StringPtr(target),
+				}
+			}
+			recordSet.ARecords = &aRecords
+		}
+
+		return recordSet, nil
 	case dns.CNAME:
 		return dns.RecordSet{
 			RecordSetProperties: &dns.RecordSetProperties{
