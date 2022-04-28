@@ -128,6 +128,7 @@ func (p *AzureProvider) Records(ctx context.Context) (endpoints []*endpoint.Endp
 			}
 
 			ep := endpoint.NewEndpointWithTTL(name, recordType, ttl, targets...)
+			ep = enrichAzureProviderSpecificOptions(ep, &recordSet)
 			log.Debugf(
 				"Found %s record for '%s' with target '%s'.",
 				ep.RecordType,
@@ -441,4 +442,19 @@ func extractAzureTargets(recordSet *dns.RecordSet) []string {
 	}
 
 	return []string{}
+}
+
+// Helper function
+func enrichAzureProviderSpecificOptions(ep *endpoint.Endpoint, recordSet *dns.RecordSet) *endpoint.Endpoint {
+	properties := recordSet.RecordSetProperties
+	if properties == nil {
+		return ep
+	}
+
+	targetResource := properties.TargetResource
+	if targetResource != nil && targetResource.ID != nil {
+		ep.WithProviderSpecific("Type", "Alias")
+	}
+
+	return ep
 }
