@@ -128,6 +128,7 @@ func (p *AzureProvider) Records(ctx context.Context) (endpoints []*endpoint.Endp
 			}
 
 			ep := endpoint.NewEndpointWithTTL(name, recordType, ttl, targets...)
+			ep = enrichAzureProviderSpecificOptions(ep, &recordSet)
 			log.Debugf(
 				"Found %s record for '%s' with target '%s'.",
 				ep.RecordType,
@@ -355,18 +356,29 @@ func (p *AzureProvider) newRecordSet(endpoint *endpoint.Endpoint) (dns.RecordSet
 	}
 	switch dns.RecordType(endpoint.RecordType) {
 	case dns.A:
-		aRecords := make([]dns.ARecord, len(endpoint.Targets))
-		for i, target := range endpoint.Targets {
-			aRecords[i] = dns.ARecord{
-				Ipv4Address: to.StringPtr(target),
-			}
-		}
-		return dns.RecordSet{
+		recordSet := dns.RecordSet{
 			RecordSetProperties: &dns.RecordSetProperties{
-				TTL:      to.Int64Ptr(ttl),
-				ARecords: &aRecords,
+				TTL: to.Int64Ptr(ttl),
 			},
-		}, nil
+		}
+
+		// if endpoint is alias record set, use targets[0] as target resource
+		if isAliasRecordSetEndpoint(endpoint) {
+			recordSet.TargetResource = &dns.SubResource{
+				ID: &endpoint.Targets[0],
+			}
+		} else {
+			// otherwise, this is a regular record set, fill A records property
+			aRecords := make([]dns.ARecord, len(endpoint.Targets))
+			for i, target := range endpoint.Targets {
+				aRecords[i] = dns.ARecord{
+					Ipv4Address: to.StringPtr(target),
+				}
+			}
+			recordSet.ARecords = &aRecords
+		}
+
+		return recordSet, nil
 	case dns.CNAME:
 		return dns.RecordSet{
 			RecordSetProperties: &dns.RecordSetProperties{
@@ -401,7 +413,7 @@ func formatAzureDNSName(recordName, zoneName string) string {
 	return fmt.Sprintf("%s.%s", recordName, zoneName)
 }
 
-// Helper function (shared with text code)
+// Helper function (shared with test code)
 func extractAzureTargets(recordSet *dns.RecordSet) []string {
 	properties := recordSet.RecordSetProperties
 	if properties == nil {
@@ -432,5 +444,43 @@ func extractAzureTargets(recordSet *dns.RecordSet) []string {
 			return []string{(*values)[0]}
 		}
 	}
+
+	// Check for A, CNAME records with 'Alias record set' pointed to Azure resource
+	// https://github.com/MicrosoftDocs/azure-docs/blob/main/articles/dns/dns-alias.md
+	targetResource := properties.TargetResource
+	if targetResource != nil && targetResource.ID != nil {
+		return []string{*targetResource.ID}
+	}
+
 	return []string{}
+}
+
+// Helper function (shared with test code)
+func enrichAzureProviderSpecificOptions(ep *endpoint.Endpoint, recordSet *dns.RecordSet) *endpoint.Endpoint {
+	properties := recordSet.RecordSetProperties
+	if properties == nil {
+		return ep
+	}
+
+	targetResource := properties.TargetResource
+	if targetResource != nil && targetResource.ID != nil {
+		ep.WithProviderSpecific("Type", "Alias")
+	}
+
+	return ep
+}
+
+// Helper function
+func isAliasRecordSetEndpoint(endpoint *endpoint.Endpoint) bool {
+	if endpoint.ProviderSpecific == nil {
+		return false
+	}
+
+	for _, property := range endpoint.ProviderSpecific {
+		if property.Name == "Type" && property.Value == "Alias" {
+			return true
+		}
+	}
+
+	return false
 }

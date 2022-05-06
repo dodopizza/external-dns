@@ -124,6 +124,7 @@ var (
 		ManagedDNSRecordTypes:       []string{endpoint.RecordTypeA, endpoint.RecordTypeCNAME},
 		RFC2136BatchChangeSize:      50,
 		OCPRouterName:               "default",
+		YandexAuthorizationType:     "instance-service-account",
 	}
 
 	overriddenConfig = &Config{
@@ -227,6 +228,7 @@ var (
 		DigitalOceanAPIPageSize:     100,
 		ManagedDNSRecordTypes:       []string{endpoint.RecordTypeA, endpoint.RecordTypeCNAME, endpoint.RecordTypeNS},
 		RFC2136BatchChangeSize:      100,
+		YandexAuthorizationType:     "instance-service-account",
 	}
 )
 
