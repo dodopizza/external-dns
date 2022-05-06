@@ -362,14 +362,10 @@ func (p *AzureProvider) newRecordSet(endpoint *endpoint.Endpoint) (dns.RecordSet
 			},
 		}
 
-		if endpoint.ProviderSpecific != nil {
-			// if endpoint is alias record set, use targets[0] as target resource
-			for _, property := range endpoint.ProviderSpecific {
-				if property.Name == "Type" && property.Value == "Alias" {
-					recordSet.TargetResource = &dns.SubResource{
-						ID: &endpoint.Targets[0],
-					}
-				}
+		// if endpoint is alias record set, use targets[0] as target resource
+		if isAliasRecordSetEndpoint(endpoint) {
+			recordSet.TargetResource = &dns.SubResource{
+				ID: &endpoint.Targets[0],
 			}
 		} else {
 			// otherwise, this is a regular record set, fill A records property
@@ -472,4 +468,19 @@ func enrichAzureProviderSpecificOptions(ep *endpoint.Endpoint, recordSet *dns.Re
 	}
 
 	return ep
+}
+
+// Helper function
+func isAliasRecordSetEndpoint(endpoint *endpoint.Endpoint) bool {
+	if endpoint.ProviderSpecific == nil {
+		return false
+	}
+
+	for _, property := range endpoint.ProviderSpecific {
+		if property.Name == "Type" && property.Value == "Alias" {
+			return true
+		}
+	}
+
+	return false
 }
