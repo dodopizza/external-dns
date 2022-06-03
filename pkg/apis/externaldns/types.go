@@ -197,6 +197,7 @@ type Config struct {
 	PiholeTLSInsecureSkipVerify       bool
 	PluralCluster                     string
 	PluralProvider                    string
+	YandexFolderId                    string
 	YandexAuthorizationType           string
 	YandexAuthorizationOAuthToken     string
 	YandexAuthorizationKeyFile        string
