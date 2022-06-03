@@ -356,10 +356,14 @@ func main() {
 		p, err = tencentcloud.NewTencentCloudProvider(domainFilter, zoneIDFilter, cfg.TencentCloudConfigFile, cfg.TencentCloudZoneType, cfg.DryRun)
 	case "yandex":
 		p, err = yandex.NewYandexProvider(
+			ctx,
 			&yandex.YandexConfig{
-				DomainFilter:   domainFilter,
-				ZoneNameFilter: zoneNameFilter,
-				DryRun:         cfg.DryRun,
+				DomainFilter:            domainFilter,
+				ZoneNameFilter:          zoneNameFilter,
+				DryRun:                  cfg.DryRun,
+				AuthorizationType:       cfg.YandexAuthorizationType,
+				AuthorizationOAuthToken: cfg.YandexAuthorizationOAuthToken,
+				AuthorizationKeyFile:    cfg.YandexAuthorizationKeyFile,
 			},
 		)
 	default:

@@ -197,6 +197,9 @@ type Config struct {
 	PiholeTLSInsecureSkipVerify       bool
 	PluralCluster                     string
 	PluralProvider                    string
+	YandexAuthorizationType           string
+	YandexAuthorizationOAuthToken     string
+	YandexAuthorizationKeyFile        string
 }
 
 var defaultConfig = &Config{
@@ -339,6 +342,7 @@ var defaultConfig = &Config{
 	PiholeTLSInsecureSkipVerify: false,
 	PluralCluster:               "",
 	PluralProvider:              "",
+	YandexAuthorizationType:     "instance-service-account",
 }
 
 // NewConfig returns new Config object
