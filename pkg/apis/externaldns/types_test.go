@@ -129,6 +129,7 @@ var (
 		IBMCloudConfigFile:          "/etc/kubernetes/ibmcloud.json",
 		TencentCloudConfigFile:      "/etc/kubernetes/tencent-cloud.json",
 		TencentCloudZoneType:        "",
+		YandexAuthorizationType:     "instance-service-account",
 	}
 
 	overriddenConfig = &Config{
@@ -239,6 +240,7 @@ var (
 		IBMCloudConfigFile:          "ibmcloud.json",
 		TencentCloudConfigFile:      "tencent-cloud.json",
 		TencentCloudZoneType:        "private",
+		YandexAuthorizationType:     "instance-service-account",
 	}
 )
 
